@@ -53,9 +53,7 @@ if you do not have them, we provide our package library below.
         "tidyverse", 
         "rstan", 
         "loo", 
-        "glmmTMB", 
-        "piecewiseSEM", 
-        "tidySEM"
+        "glmmTMB"
         )
       )
 
@@ -69,7 +67,6 @@ to run sequentially, so there is no need to run things out of order.
 
 You can download the entire repository and use it as a project, as we included an R project file to help
 with integrating this into your own R workspace.
-
 
 
 # Acknowledgements
