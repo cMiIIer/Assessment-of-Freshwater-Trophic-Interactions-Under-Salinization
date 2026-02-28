@@ -75,7 +75,7 @@ with integrating this into your own R workspace.
 # Acknowledgements
 
 I would like to thank my Advisor, Dr. Allison Welch, and two
-undergraduate coauthors: Maya Mylott and Alex Barron. Further support
-was provided by Greg Townsley, Pete Meier, Dr. Bob Podoslky, Dr. Freya
-Rowland, Dr. A. Challen Hyman, Dr. Tony Harold, Dr. Norm Levine and
-lastly Dr. Dan McGlinn.
+undergraduate coauthors: Maya Mylott and Alex Barron. This would also not 
+be possible without my advisory commitee Dr. A. Challen Hyman, Dr. Tony Harold, Dr. Norm Levine and
+Dr. Dan McGlinn. Further support and assistance was provided by Greg Townsley, Pete Meier, Dr. Bob 
+Podoslky and Dr. Freya Rowland.
