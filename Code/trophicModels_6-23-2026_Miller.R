@@ -19,7 +19,7 @@ Sys.setenv(CHROMOTE_CHROME = "C://Program Files (x86)/Microsoft/Edge/Application
 "%nin%"<- Negate("%in%")
 
 # Data
-data<- read.csv("Data/FinalData_12-11-25_Miller/TotalSystem_4-24-2026_Miller.csv") %>%
+data<- read.csv("Data/TotalSystem_4-24-2026_Miller.csv") %>%
   filter(Tank %nin% c(11,14)) %>% 
   ungroup() %>% 
   group_by(Tank, Position, Treatment)
@@ -75,7 +75,6 @@ predictorData<- dataLag %>%
 
 zoopData<- left_join(zoopData, predictorData, join_by(Tank, Time ,Treatment))
 rm(predictorData)
-
 
 
 # Modeling
@@ -568,15 +567,3 @@ diploPlotList[[4]]<- plot(conditional_effects(diploFitList[[bestDiploMod]], effe
   geom_ribbon(alpha = .4) + geom_smooth(color = "black") +
   theme(legend.position = "none", axis.title = element_text(face = "bold", size = 12), text = element_text(family = "Segoe UI"))
 plot_grid(plotlist = diploPlotList, labels = "AUTO", scale = 0.9)
-
-
-# ---- Interaction Validation ---
-suppressMessages(library(interactions))
-chlFit<- chlFitList[[bestChlMod]]
-
-
-plot_grid(
-  plot_grid(chlPlotList[[1]],chlPlotList[[2]],chlPlotList[[3]], nrow = 1, labels = LETTERS[1:3], scale = .9),
-  plot_grid(chlPlotList[[4]]+theme(legend.position = "none"), chlSlopesPlot, nrow = 1, labels = LETTERS[4:5], scale = .9), ncol = 1
-)
-
