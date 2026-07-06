@@ -1,0 +1,16 @@
+Version: 1.0
+ProjectId: 2e06a112-1aa4-45f7-9093-b6324fc72693
+
+RestoreWorkspace: Default
+SaveWorkspace: Default
+AlwaysSaveHistory: Default
+
+EnableCodeIndexing: Yes
+UseSpacesForTab: Yes
+NumSpacesForTab: 2
+Encoding: UTF-8
+
+RnwWeave: Sweave
+LaTeX: pdfLaTeX
+
+ProjectName: Master's Thesis
