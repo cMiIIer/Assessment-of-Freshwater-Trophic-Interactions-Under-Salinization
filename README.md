@@ -33,8 +33,7 @@ employed a seed.
 
 ## Code Base Structure and Dependencies
 
-The data and code are stored within the eponomyously named folders. A overarching 
-project file is attatched for better interaction with the R scripts.
+The data and code are stored within the eponomyously named folders. 
 
 We employ mtwo programming languages, R and Stan, we work with both 
 using the RStudio IDE. For replication, you need not work with the Stan
