@@ -33,16 +33,19 @@ employed a seed.
 
 ## Code Base Structure and Dependencies
 
-The data and code are stored within the eponomyously named folders.
+The data and code are stored within the eponomyously named folders. A overarching 
+project file is attatched for better interaction with the R scripts.
 
 We employ mtwo programming languages, R and Stan, we work with both 
-using the RStudio IDE. For replication, you need work with the Stan
-code directly, just use the R files as it is how we interact with our
-Stan files. We use a suite of packages in R, most notably ones
+using the RStudio IDE. For replication, you need not work with the Stan
+code directly, just use the R files. We use a suite of packages in R, most notably ones
 to interface with the Stan ecosystem, so you will need the following packages
 installed in your R enviornment to succesfully run our code. All packages 
 are loaded within the R scripts, but if you want to install them before hand
 if you do not have them, we provide our package library below.
+
+To interface with Stan and use it packages, you need to configure R to do so. Further
+infromation can be found at https://github.com/stan-dev/rstan/wiki/RStan-Getting-Started
 
 ### Requried Packages
 
