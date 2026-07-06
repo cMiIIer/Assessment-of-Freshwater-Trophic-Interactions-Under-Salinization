@@ -33,9 +33,7 @@ employed a seed.
 
 ## Code Base Structure and Dependencies
 
-The data and code are stored within the eponomyously named code structures. For 
-objective one of the study, please refer to files denoted with "SEM" and 
-objective two "TTE". 
+The data and code are stored within the eponomyously named folders.
 
 We employ mtwo programming languages, R and Stan, we work with both 
 using the RStudio IDE. For replication, you need work with the Stan
@@ -51,9 +49,14 @@ if you do not have them, we provide our package library below.
     install.packages(
       c(
         "tidyverse", 
+        "ggtext",
+        "cowplot",
+        "bayesplot",
+        "ggbreak",
+        "gridGraphics",
         "rstan", 
-        "loo", 
-        "glmmTMB"
+        "brms",
+        "cmdstanr",
         )
       )
 
