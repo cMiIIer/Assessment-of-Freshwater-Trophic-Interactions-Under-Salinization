@@ -19,7 +19,7 @@ Sys.setenv(CHROMOTE_CHROME = "C://Program Files (x86)/Microsoft/Edge/Application
 "%nin%"<- Negate("%in%")
 
 # Data
-data<- read.csv("Data/TotalSystem_4-24-2026_Miller.csv") %>%
+data<- read.csv("Data/FinalData_12-11-25_Miller/TotalSystem_4-24-2026_Miller.csv") %>%
   filter(Tank %nin% c(11,14)) %>% 
   ungroup() %>% 
   group_by(Tank, Position, Treatment)
@@ -75,6 +75,7 @@ predictorData<- dataLag %>%
 
 zoopData<- left_join(zoopData, predictorData, join_by(Tank, Time ,Treatment))
 rm(predictorData)
+
 
 
 # Modeling
@@ -135,6 +136,11 @@ chlModSum<- chlModSum$fixed %>% round(., 2) %>%
   select(!c(Bulk_ESS, Tail_ESS, Rhat)) %>%
   mutate(Meaningful = if_else(`l-95% CI` <= 0 & `u-95% CI` >= 0, FALSE, TRUE)) %>%
   rownames_to_column("Term")
+
+chlPPFit2<- pp_check(chlFitList[["g1"]], type = 'scatter_avg', stat="mean") 
+chlPPDist2<- pp_check(chlFitList[["g1"]], ndraws = 100) + scale_x_continuous(limits = c(0,45)) +
+  xlab("Density") 
+plot_grid(chlPPFit2, chlPPDist2, labels = "AUTO", align = "h", scale = 0.9)
 
 chlPPFit<- pp_check(chlFitList[["g2"]], type = 'scatter_avg', stat="mean") 
 chlPPDist<- pp_check(chlFitList[["g2"]], ndraws = 100) + scale_x_continuous(limits = c(0,45)) +
@@ -381,21 +387,23 @@ gt(diploModSum, rowname_col = "Term") %>%
 bestChlMod<- "g2"
 chlPlotList<- list()
 chlPlotList[[1]]<- plot(conditional_effects(chlFitList[[bestChlMod]], effects = "Treatment", resolution =1000, prob = 0.8, plot=F))[[1]] +
-  theme_classic() + xlab("Salinity (ppt)") + ylab("Chlorophyll a Concentration (\u03bcg/L)") +
+  theme_classic() + xlab("Salinity (ppt)") + 
+  ylab(expression(bold(paste("Chlorophyll a Concentration (\u03bcg L"^"-1",")")))) +
   geom_point(data = dataLag, mapping = aes(Treatment, ChlAConcentration), inherit.aes = FALSE,  size = 2, alpha = 0.3) + 
   geom_ribbon(alpha = .4) + geom_smooth(color = "black") +
   theme(legend.position = "none", axis.title = element_text(face = "bold", size = 12), text = element_text(family = "Segoe UI")) +
   coord_trans(y = "log")
 chlPlotList[[2]]<- plot(conditional_effects(chlFitList[[bestChlMod]], effects = "TadLag", resolution =1000, prob = 0.8, plot=F))[[1]] +
-  theme_classic() + xlab("Total Tadpole Biomass (g)") + ylab("Chlorophyll a Concentration (\u03bcg/L)") +
+  theme_classic() + xlab("Total Tadpole Biomass (g)") + 
+  ylab(expression(bold(paste("Chlorophyll a Concentration (\u03bcg L"^"-1",")")))) +
   geom_point(data = dataLag, mapping = aes(TadLag, ChlAConcentration), inherit.aes = FALSE,  size = 2, alpha = 0.3) + 
   geom_ribbon(alpha = .4) + geom_smooth(color = "black") +
   theme(legend.position = "none", axis.title = element_text(face = "bold", size = 12), text = element_text(family = "Segoe UI"))+
   coord_trans(y = "log")
 chlPlotList[[3]]<- plot(conditional_effects(chlFitList[[bestChlMod]], effects = "DiploLag10", resolution =1000,
                                             prob = 0.8, int_conditions = list(Treatment = c(0.4,3,5)), plot=F))[[1]] +
-  theme_classic() + xlab(expression(bold(paste("Diplostracan Concentration (No. hL"^"-1",")")))) + 
-  ylab("Chlorophyll a Concentration (\u03bcg/L)") +
+  theme_classic() + xlab(expression(bold(paste("Diplostracan Concentration (No. cL"^"-1",")")))) + 
+  ylab(expression(bold(paste("Chlorophyll a Concentration (\u03bcg L"^"-1",")")))) +
   geom_point(data = dataLag, mapping = aes(DiploLag10, ChlAConcentration),
              inherit.aes = FALSE,  size = 2, alpha = 0.3) + 
   geom_ribbon(alpha = .4) + geom_smooth(color = "black") +
@@ -403,9 +411,12 @@ chlPlotList[[3]]<- plot(conditional_effects(chlFitList[[bestChlMod]], effects = 
   coord_trans(y = "log")
 
 
+plot_grid(chlPlotList[[1]], chlPlotList[[3]], scale = 0.9, ncol =1)
+
+
 
 ## Interaction 
-drawMatrix<- as_draws_df(chlFit) %>% select(b_CopeLag10, `b_Treatment:CopeLag10`) %>%
+drawMatrix<- as_draws_df(chlFitList[["g2"]]) %>% select(b_CopeLag10, `b_Treatment:CopeLag10`) %>%
   mutate(`0.4` =(b_CopeLag10+(`b_Treatment:CopeLag10`*0.4))) %>%
   mutate(`3` =(b_CopeLag10+(`b_Treatment:CopeLag10`*3))) %>%
   mutate(`5` =(b_CopeLag10+(`b_Treatment:CopeLag10`*5))) %>%
@@ -429,12 +440,14 @@ chlSlopesPlot<- ggplot(data= drawMatrix, aes(value, fill = Treatment)) + geom_hi
 
 chlPlotList[[4]]<- plot(conditional_effects(chlFitList[[bestChlMod]], effects = "CopeLag10:Treatment", resolution =1000,
                          prob = 0.8, int_conditions = list(Treatment = c(0.4,3,5)), plot=F))[[1]] +
-  theme_classic() + xlab(expression(bold(paste("Copepod Concentration (No. hL"^"-1",")")))) + 
-  ylab("Chlorophyll a Concentration (\u03bcg/L)") +
+  theme_classic() + xlab(expression(bold(paste("Copepod Concentration (No. cL"^"-1",")")))) + 
+  ylab(expression(bold(paste("Chlorophyll a Concentration (\u03bcg L"^"-1",")")))) +
   geom_point(data = dataLag, mapping = aes(CopeLag10, ChlAConcentration, color = as.factor(Treatment)),
              inherit.aes = FALSE,  size = 2, alpha = 0.3) + 
   geom_ribbon(alpha = .4) +
   theme(axis.title = element_text(face = "bold", size = 12), text = element_text(family = "Segoe UI")) +
+  #scale_fill_manual(values = c("dodgerblue", "goldenrod", "firebrick")) +
+  #scale_color_manual(values = c("dodgerblue", "goldenrod", "firebrick")) +
   coord_trans(y = "log")
 plot_grid(
   plot_grid(chlPlotList[[1]], chlPlotList[[2]], chlPlotList[[3]], scale = 0.9, nrow =1, labels = "AUTO"),
@@ -449,14 +462,14 @@ tadPlotListh<- list()
 dataLag2<- dataLag %>% mutate(TadPres = if_else(TotalTadMass == 0, 1, 0))
 tadPlotListh[[1]]<- print(plot(conditional_effects(tadFitList[[bestTadMod]], resolution =1000, dpar = "hu", effects = "tadNumLag",
                                              prob = 0.8, plot=F))[[1]] +
-  theme_classic() + xlab("Tadpole Density (Num)") + ylab("Non-Zero Total Tadpole Biomass (g)")+
+  theme_classic() + xlab("Tadpole Density (Num)") + ylab("P(No Biomass)")+
   geom_jitter(data = dataLag2, mapping = aes(tadNumLag, TadPres), inherit.aes = FALSE,  size = 2, alpha = 0.3,
               height = 0, width = 0.4) + 
   geom_ribbon(alpha = .4) + geom_line(color = "black", lwd = 1) +
   theme(legend.position = "none", axis.title = element_text(face = "bold", size = 12), text = element_text(family = "Segoe UI")))
 tadPlotListh[[2]]<- print(plot(conditional_effects(tadFitList[[bestTadMod]], resolution =1000, dpar = "hu", effects = "Treatment",
                                              prob = 0.8, plot=F))[[1]] +
-  theme_classic() + xlab("Salinity Treatment (ppt)") + ylab("Non-Zero Total Tadpole Biomass (g)")+
+  theme_classic() + xlab("Salinity (ppt)") + ylab("P(No Biomass)")+
   geom_jitter(data = dataLag2, mapping = aes(Treatment, TadPres), inherit.aes = FALSE,  size = 2, alpha = 0.3,
               height = 0, width = 0.4) + 
   geom_ribbon(alpha = .4) + geom_line(color = "black", lwd = 1) +
@@ -464,7 +477,8 @@ tadPlotListh[[2]]<- print(plot(conditional_effects(tadFitList[[bestTadMod]], res
   scale_y_break(c(0.004, .999), ticklabels = 1, symbol = "slash", expand= T, space = 0.1))
 tadPlotListh[[3]]<- print(plot(conditional_effects(tadFitList[[bestTadMod]], resolution =1000, dpar = "hu", effects = "CopeLag10",
                                              prob = 0.8, plot=F))[[1]] +
-  theme_classic() + xlab(expression(bold(paste("Copepod Concentration (No. hL"^"-1",")")))) + ylab("Non-Zero Total Tadpole Biomass (g)")+
+  theme_classic() + xlab(expression(bold(paste("Copepod Concentration (No. cL"^"-1",")")))) + 
+    ylab("P(No Biomass)")+
   geom_jitter(data = dataLag2, mapping = aes(CopeLag10, TadPres), inherit.aes = FALSE,  size = 2, alpha = 0.3,
               height = 0, width = 0.4) + 
   geom_ribbon(alpha = .4) + geom_line(color = "black", lwd = 1) +
@@ -472,7 +486,8 @@ tadPlotListh[[3]]<- print(plot(conditional_effects(tadFitList[[bestTadMod]], res
   scale_y_break(c(0.03, .999), ticklabels = 1, symbol = "slash", expand= T, space = 0.1))
 tadPlotListh[[4]]<- print(plot(conditional_effects(tadFitList[[bestTadMod]], resolution =1000, dpar = "hu", effects = "DiploLag10",
                                              prob = 0.8, plot=F))[[1]] +
-  theme_classic() + xlab(expression(bold(paste("Diplostracan Concentration (No. hL"^"-1",")")))) + ylab("Non-Zero Total Tadpole Biomass (g)") +
+  theme_classic() + xlab(expression(bold(paste("Diplostracan Concentration (No. cL"^"-1",")")))) + 
+    ylab("P(No Biomass)")+
   geom_jitter(data = dataLag2, mapping = aes(DiploLag10, TadPres), inherit.aes = FALSE,  size = 2, alpha = 0.3,
               height = 0, width = 0) + 
   geom_ribbon(alpha = .4) + geom_line(color = "black", lwd = 1) +
@@ -480,7 +495,8 @@ tadPlotListh[[4]]<- print(plot(conditional_effects(tadFitList[[bestTadMod]], res
   scale_y_break(c(0.0075, .999), ticklabels = 1, symbol = "slash", expand= T, space = 0.1))
 tadPlotListh[[5]]<- print(plot(conditional_effects(tadFitList[[bestTadMod]], resolution =1000, dpar = "hu", effects = "ChlLag",
                                              prob = 0.8, plot=F))[[1]] +
-  theme_classic() + xlab("Chlorophyll a Concentration (\u03bcg/L)") + ylab("Non-Zero Total Tadpole Biomass (g)") +
+  theme_classic() + xlab(expression(bold(paste("Chlorophyll a Concentration (\u03bcg L"^"-1",")")))) + 
+    ylab("P(No Biomass)")+
   geom_jitter(data = dataLag2, mapping = aes(ChlLag, TadPres), inherit.aes = FALSE,  size = 2, alpha = 0.3,
               height = 0, width = 0) + 
   geom_ribbon(alpha = .4) + geom_line(color = "black", lwd = 1) +
@@ -492,26 +508,31 @@ hurdlePlots
 tadPlotList<- list()
 tadPlotList[[1]]<- plot(conditional_effects(tadFitList[[bestTadMod]], resolution =1000,  effects = "Treatment",
                                              prob = 0.8, plot=F))[[1]] +
-  theme_classic() + xlab("Salinity Treatment (ppt)") + ylab("Total Tadpole Biomass (g)")+
-  geom_point(data = dataLag2, mapping = aes(Treatment, TotalTadMass), inherit.aes = FALSE,  size = 2, alpha = 0.3) + 
+  theme_classic() + xlab("Salinity (ppt)") + ylab("Total Tadpole Biomass (g)")+
+  geom_point(data = dataLag2 %>% filter(TotalTadMass != 0),
+             mapping = aes(Treatment, TotalTadMass), inherit.aes = FALSE,  size = 2, alpha = 0.3) + 
   geom_ribbon(alpha = .4) + geom_line(color = "black", lwd = 1) +
   theme(legend.position = "none", axis.title = element_text(face = "bold", size = 12), text = element_text(family = "Segoe UI")) 
 tadPlotList[[2]]<- plot(conditional_effects(tadFitList[[bestTadMod]], resolution =1000, effects = "CopeLag10",
                                              prob = 0.8, plot=F))[[1]] +
-  theme_classic() + xlab(expression(bold(paste("Copepod Concentration (No. hL"^"-1",")")))) + ylab("Total Tadpole Biomass (g)")+
-  geom_point(data = dataLag2, mapping = aes(CopeLag10, TotalTadMass), inherit.aes = FALSE,  size = 2, alpha = 0.3) + 
+  theme_classic() + xlab(expression(bold(paste("Copepod Concentration (No. cL"^"-1",")")))) + ylab("Total Tadpole Biomass (g)")+
+  geom_point(data = dataLag2  %>% filter(TotalTadMass != 0),
+             mapping = aes(CopeLag10, TotalTadMass), inherit.aes = FALSE,  size = 2, alpha = 0.3) + 
   geom_ribbon(alpha = .4) + geom_line(color = "black", lwd = 1) +
   theme(legend.position = "none", axis.title = element_text(face = "bold", size = 12), text = element_text(family = "Segoe UI")) 
 tadPlotList[[3]]<- plot(conditional_effects(tadFitList[[bestTadMod]], effects = "DiploLag10", resolution =1000, prob = 0.8, 
                                             plot=F))[[1]] +
-  theme_classic() + xlab(expression(bold(paste("Diplostracan Concentration (No. hL"^"-1",")")))) + ylab("Total Tadpole Biomass (g)")+
-  geom_point(data = dataLag2, mapping = aes(DiploLag10, TotalTadMass), inherit.aes = FALSE,  size = 2, alpha = 0.3) + 
+  theme_classic() + xlab(expression(bold(paste("Diplostracan Concentration (No. cL"^"-1",")")))) + ylab("Total Tadpole Biomass (g)")+
+  geom_point(data = dataLag2 %>% filter(TotalTadMass != 0),
+             mapping = aes(DiploLag10, TotalTadMass), inherit.aes = FALSE,  size = 2, alpha = 0.3) + 
   geom_ribbon(alpha = .4) + geom_line(color = "black", lwd = 1) +
-  theme(legend.position = "none", axis.title = element_text(face = "bold", size = 12), text = element_text(family = "Segoe UI"))
+  theme(legend.position = "none", axis.title = element_text(face = "bold", size = 12),
+        text = element_text(family = "Segoe UI"))
 tadPlotList[[4]]<- plot(conditional_effects(tadFitList[[bestTadMod]], effects = "ChlLag", resolution =1000, prob = 0.8, 
                                             plot=F))[[1]] +
   theme_classic() + xlab("Chlorophyll a Concentration (\u03bcg/L)") + ylab("Total Tadpole Biomass (g)")+
-  geom_point(data = dataLag2, mapping = aes(ChlLag, TotalTadMass), inherit.aes = FALSE,  size = 2, alpha = 0.3) + 
+  geom_point(data = dataLag2 %>% filter(TotalTadMass != 0),
+             mapping = aes(ChlLag, TotalTadMass), inherit.aes = FALSE,  size = 2, alpha = 0.3) + 
   geom_ribbon(alpha = .4) + geom_line(color = "black", lwd = 1) +
   theme(legend.position = "none", axis.title = element_text(face = "bold", size = 12), text = element_text(family = "Segoe UI"))
 nonZeroPlots<- plot_grid(plotlist = tadPlotList, labels = c("AUTO"), scale = 0.9)
@@ -531,7 +552,7 @@ copePlotList[[2]]<- plot(conditional_effects(copeFitList[[bestCopeMod]], effects
   geom_ribbon(alpha = .4) + geom_smooth(color = "black") +
   theme(legend.position = "none", axis.title = element_text(face = "bold", size = 12), text = element_text(family = "Segoe UI"))
 copePlotList[[3]]<- plot(conditional_effects(copeFitList[[bestCopeMod]], effects = "DiploLag10", resolution =1000, prob = 0.8, plot=F))[[1]] +
-  theme_classic() + xlab(expression(bold(paste("Diplostracan Concentration (No. hL"^"-1",")")))) + ylab("Copepod Abundance (No.)") +
+  theme_classic() + xlab(expression(bold(paste("Diplostracan Concentration (No. cL"^"-1",")")))) + ylab("Copepod Abundance (No.)") +
   geom_point(data = zoopData, mapping = aes(DiploLag10, Copepoda), inherit.aes = FALSE,  size = 2, alpha = 0.3) + 
   geom_ribbon(alpha = .4) + geom_smooth(color = "black") +
   theme(legend.position = "none", axis.title = element_text(face = "bold", size = 12), text = element_text(family = "Segoe UI"))
@@ -547,18 +568,18 @@ diploPlotList<- list()
 diploPlotList[[1]]<- plot(conditional_effects(diploFitList[[bestDiploMod]], effects = "Treatment", resolution =1000, prob = 0.8, 
                                               plot=F))[[1]] +
   theme_classic() + xlab("Salinity (ppt)") + ylab("Diplostraca Abundance (No.)") +
-  geom_jitter(data = zoopData, mapping = aes(Treatment, Diplostraca), inherit.aes = FALSE,  size = 2, alpha = 0.3, width = .2) + 
+  geom_point(data = zoopData, mapping = aes(Treatment, Diplostraca), inherit.aes = FALSE,  size = 2, alpha = 0.3, width = .2) + 
   geom_ribbon(alpha = .4) + geom_smooth(color = "black", lwd = 1) +
   theme(legend.position = "none", axis.title = element_text(face = "bold", size = 12), text = element_text(family = "Segoe UI"))
 diploPlotList[[2]]<- plot(conditional_effects(diploFitList[[bestDiploMod]], effects = "TadLag", resolution =1000, prob = 0.8, 
                                               plot=F))[[1]] +
-  theme_classic() + xlab("Total Tadpole Mass (g)") + ylab("Diplostraca Abundance (No.)") +
+  theme_classic() + xlab("Total Tadpole Bioass (g)") + ylab("Diplostraca Abundance (No.)") +
   geom_point(data = zoopData, mapping = aes(TadLag, Diplostraca), inherit.aes = FALSE,  size = 2, alpha = 0.3) + 
   geom_ribbon(alpha = .4) + geom_smooth(color = "black", lwd = 1) +
   theme(legend.position = "none", axis.title = element_text(face = "bold", size = 12), text = element_text(family = "Segoe UI"))
 diploPlotList[[3]]<- plot(conditional_effects(diploFitList[[bestDiploMod]], effects = "CopeLag10", resolution =1000, prob = 0.8, plot=F))[[1]] +
-  theme_classic() + xlab(expression(bold(paste("Copepod Concentration (No. hL"^"-1",")")))) + ylab("Diplostraca Abundance (No.)") +
-  geom_point(data = zoopData, mapping = aes(DiploLag10, Diplostraca), inherit.aes = FALSE,  size = 2, alpha = 0.3) + 
+  theme_classic() + xlab(expression(bold(paste("Copepod Concentration (No. cL"^"-1",")")))) + ylab("Diplostraca Abundance (No.)") +
+  geom_point(data = zoopData, mapping = aes(CopeLag10, Diplostraca), inherit.aes = FALSE,  size = 2, alpha = 0.3) + 
   geom_ribbon(alpha = .4) + geom_smooth(color = "black") +
   theme(legend.position = "none", axis.title = element_text(face = "bold", size = 12), text = element_text(family = "Segoe UI"))
 diploPlotList[[4]]<- plot(conditional_effects(diploFitList[[bestDiploMod]], effects = "ChlLag", resolution =1000, prob = 0.8, plot=F))[[1]] +
@@ -567,3 +588,5 @@ diploPlotList[[4]]<- plot(conditional_effects(diploFitList[[bestDiploMod]], effe
   geom_ribbon(alpha = .4) + geom_smooth(color = "black") +
   theme(legend.position = "none", axis.title = element_text(face = "bold", size = 12), text = element_text(family = "Segoe UI"))
 plot_grid(plotlist = diploPlotList, labels = "AUTO", scale = 0.9)
+
+
