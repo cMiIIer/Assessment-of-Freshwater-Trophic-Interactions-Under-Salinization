@@ -427,16 +427,21 @@ drawMatrix<- as_draws_df(chlFitList[["g2"]]) %>% select(b_CopeLag10, `b_Treatmen
   mutate(q5 = quantile(value, probs= 0.025)) %>%
   mutate(q95 = quantile(value, probs= 0.975))
 
-chlSlopesPlot<- ggplot(data= drawMatrix, aes(value, fill = Treatment)) + geom_histogram(color = "black") + facet_wrap(~Treatment, ncol=1) +
+chlSlopesPlot<- ggplot(data= drawMatrix, aes(value, fill = Treatment)) + geom_histogram(color = "black") + 
+  facet_wrap(~Treatment, ncol=1, labeller = as_labeller(c(
+    `0.4` = "0.4 ppt",
+    `3` = "3.0 ppt",
+    `5` = "5.0 ppt"
+    ))) +
   geom_vline(xintercept = 0, lwd = 2, color = "firebrick") + 
   geom_vline(data = drawMatrix, aes(group = Treatment, xintercept = q5+.01), lwd = 2, linetype = "dashed") +
   geom_vline(data = drawMatrix, aes(group = Treatment, xintercept = q95), lwd = 2, linetype = "dashed") +
   ylab("Draws") + 
   xlab("Copepod Interaction Slope Estimate") + 
-  labs(fill = "Salinity Treatment") +
+  labs(fill = "Salinity (ppt)") +
   theme_classic() +
   theme(axis.title = element_text(face = "bold", size = 12)) +
-  scale_fill_hue(direction= -1)
+  scale_fill_hue(direction= -1) 
 
 chlPlotList[[4]]<- plot(conditional_effects(chlFitList[[bestChlMod]], effects = "CopeLag10:Treatment", resolution =1000,
                          prob = 0.8, int_conditions = list(Treatment = c(0.4,3,5)), plot=F))[[1]] +
