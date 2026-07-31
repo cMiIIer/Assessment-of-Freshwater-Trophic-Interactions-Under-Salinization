@@ -7,6 +7,9 @@ rm(list=ls(all=TRUE))
 # Seed for reproductibilbity
 set.seed("1234")
 
+# Pre-Run Code Environment
+#load("~/Academics/Master's Degree/Thesis/crModelEnviro.RData")
+
 # Libraries
 ## Data Manip and visualization 
 suppressMessages(library(tidyverse))
@@ -22,7 +25,7 @@ options(mc.cores = parallel::detectCores())
 rstan_options(auto_write = TRUE)
 
 # Data 
-anura_person_period<- read.csv("Data/anuraTTEFormatedData_6-12-2026_Miller.csv")
+anura_person_period<- read.csv("Data/FinalData_12-11-25_Miller/anuraTTEFormatedData_6-12-2026_Miller.csv")
 
 ## Removing T1 
 anura_person_period<- anura_person_period %>% 
@@ -48,7 +51,8 @@ anura_person_period<- anura_person_period %>%
 range(anura_person_period$CopeLag10)
 
 #Stan Model
-crModelcmd<- cmdstan_model("Code/CompetingRisks_RandomEffectsandTime_cmd.stan")
+#crModel<- stan_model("Code/Final Code/Stan Code/Event Analysis/CompetingRisks_RandomEffectsandTime.stan")
+crModelcmd<- cmdstan_model("Code/Final Code/Stan Code/Event Analysis/CompetingRisks_RandomEffectsandTime_cmd.stan")
 
 #-----Competing Risks Integration-------------------------------------------------
 # Matrix
@@ -70,10 +74,21 @@ crData<-
   )
 
 # Model Fit
+crModelGeneral <- sampling(crModel, data = crData, chains = 1,
+                           iter = 10000,
+                           init = "0")
+crModelGeneral@stanmodel@dso <- new("cxxdso")
+saveRDS(crModelGeneral, file = "Code/Final Code/Saved Models/savedCR/GTF_General.rds")
+crModelGeneral<- readRDS("Code/Final Code/Saved Models/savedCR/GTF_General.rds")
+
 crModelGeneralcmd<- crModelcmd$sample(
   data = crData, chains = 1, iter_warmup=5000, iter_sampling = 5000, init = 0
 )
-crModelGeneralcmd$save_object("Code/Saved Models/savedCR/GTF_Generalcmd.rds")
+crModelGeneralcmd$save_object("Code/Final Code/Saved Models/savedCR/GTF_Generalcmd.rds")
+
+#crModelGeneral<- readRDS("Code/Final Code/Saved Models/savedCR/GTF_General.rds")
+#crGeneralModSum<- summary(crModelGeneral, pars = c("alpha", "beta", "theta", "gamma"),
+ #                         probs = c(0.025,.1,.9, 0.975))$summary
 
 crGeneralModSum<- crModelGeneralcmd$summary(variables = c("alpha", "beta", "theta", "gamma"))
 crGeneralModSumTab<- crGeneralModSum %>% as.data.frame() %>%  
@@ -98,10 +113,12 @@ gt(crGeneralModSumTab, rowname_col = "coef") %>%
 
 #-----Posterior Predictive Checking8-------------------------------------------------
 # General PP checks
+#M_rep<-extract(crModelGeneral, pars = "M_rep")$M_rep
+#M_rep_mat<- as.matrix(M_rep)
 M_rep_mat<- crModelGeneral$draws("M_rep", format = "matrix")
 M_obs <- as.vector(crData$Event)
 crPPDist<- bayesplot::ppc_dens_overlay(y = M_obs, yrep = M_rep_mat[1:100,]) +
-  xlab("Density") + theme(axis.title.x = element_text(face="bold"))
+  xlab("Observations") + ylab("Frequency")
 
 M_rep_mat_meta<- M_rep_mat -1
 M_rep_mat_meta[M_rep_mat_meta==2]<-0
@@ -433,7 +450,7 @@ Chl <- CF_Data_Full %>% filter(Salinity == 3, round(Cope,2) == mean_cope, round(
   geom_linerange(aes(Time, ymin = Min, ymax = Max, color = Chl), lwd=4, alpha = 0.3,position = position_dodge(width=.5))+
   #scale_colour_manual(values=my_green) +
   scale_color_manual(values = c("#5ec962","#3b528b","#440154"), 
-                     name = expression(paste("Chlorophyll-A Concentration(\u03bcg L"^"-1",")"))) +
+                     name = expression(paste("Chlorophyll-A Concentration (\u03bcg L"^"-1",")"))) +
   theme(legend.position = "top")+labs(y = "Hazard", x = "Time (fortnights)") + 
   facet_wrap(~as.factor(Category), labeller = as_labeller(c(`Death` = "Death*", `Metamorphosis` = "Metamorphosis*", `None`="None"))) +
   theme(axis.title = element_text(face = "bold", size = 12), axis.title.x = element_blank(),
@@ -465,7 +482,7 @@ Cope <- CF_Data_Full %>% filter(Salinity == 3, round(Chl,2) == mean_chl, round(D
   geom_linerange(aes(Time, ymin = Min, ymax = Max, color = Cope), lwd=4, alpha = 0.3, position = position_dodge(width=.5))+
   #scale_colour_manual(values=my_red) +
   scale_color_manual(values = c("#fc8961","#b73779","#51127c"), 
-                     name = expression(paste("Copepod Concentration (No. hL"^"-1",")"))) +
+                     name = expression(paste("Copepod Concentration (No. cL"^"-1",")"))) +
   theme(legend.position = "top")+labs(y = "Hazard", x = "Time (fortnights)") + 
   facet_wrap(~as.factor(Category), labeller = as_labeller(c(`Death` = "Death*", `Metamorphosis` = "Metamorphosis", `None`="None"))) +
   theme(axis.title = element_text(face = "bold", size = 12), axis.title.x = element_blank(),
@@ -498,7 +515,7 @@ Diplo <- CF_Data_Full %>% filter(Salinity == 3, round(Chl,2) == mean_chl, round(
   geom_linerange(aes(Time, ymin = Min, ymax = Max, color = Diplo), lwd=4, alpha = 0.3, position = position_dodge(width=.5))+
   #scale_colour_manual(values=my_purple) +
   scale_color_manual(values = c("#A6BDD7","#C10020","#CEA262"), 
-                     name = expression(paste("Diplostracan Concentration (No. hL"^"-1",")"))) +
+                     name = expression(paste("Diplostracan Concentration (No. cL"^"-1",")"))) +
   theme(legend.position = "top")+labs(y = "Hazard", x = "Time (fortnights)") + 
   facet_wrap(~as.factor(Category), labeller = as_labeller(c(`Death` = "Death*", `Metamorphosis` = "Metamorphosis", `None`="None"))) +
   theme(axis.title = element_text(face = "bold", size = 12), axis.title.x = element_blank(),
