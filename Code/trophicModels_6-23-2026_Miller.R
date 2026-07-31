@@ -137,20 +137,20 @@ chlModSum<- chlModSum$fixed %>% round(., 2) %>%
   mutate(Meaningful = if_else(`l-95% CI` <= 0 & `u-95% CI` >= 0, FALSE, TRUE)) %>%
   rownames_to_column("Term")
 
-chlPPFit2<- pp_check(chlFitList[["g1"]], type = 'scatter_avg', stat="mean") 
-chlPPDist2<- pp_check(chlFitList[["g1"]], ndraws = 100) + scale_x_continuous(limits = c(0,45)) +
-  xlab("Density") 
+chlPPFit1<- pp_check(chlFitList[["g1"]], type = 'scatter_avg', stat="mean") 
+chlPPDist1<- pp_check(chlFitList[["g1"]], ndraws = 100) + scale_x_continuous(limits = c(0,45)) +
+  xlab("Observations") + ylab("Frequency")
+plot_grid(chlPPFit1, chlPPDist1, labels = "AUTO", align = "h", scale = 0.9)
+
+chlPPFit2<- pp_check(chlFitList[["g2"]], type = 'scatter_avg', stat="mean") 
+chlPPDist2<- pp_check(chlFitList[["g2"]], ndraws = 100) + scale_x_continuous(limits = c(0,45)) +
+  xlab("Observations") + ylab("Frequency")
 plot_grid(chlPPFit2, chlPPDist2, labels = "AUTO", align = "h", scale = 0.9)
 
-chlPPFit<- pp_check(chlFitList[["g2"]], type = 'scatter_avg', stat="mean") 
-chlPPDist<- pp_check(chlFitList[["g2"]], ndraws = 100) + scale_x_continuous(limits = c(0,45)) +
-  xlab("Density") 
-plot_grid(chlPPFit, chlPPDist, labels = "AUTO", align = "h", scale = 0.9)
-
-chlPPFit2<- pp_check(chlFitList[["g3"]], type = 'scatter_avg', stat="mean") 
-chlPPDist2<- pp_check(chlFitList[["g3"]], ndraws = 100) + scale_x_continuous(limits = c(0,45)) +
-  xlab("Density") 
-plot_grid(chlPPFit2, chlPPDist2, labels = "AUTO", align = "h", scale = 0.9)
+chlPPFit3<- pp_check(chlFitList[["g3"]], type = 'scatter_avg', stat="mean") 
+chlPPDist3<- pp_check(chlFitList[["g3"]], ndraws = 100) + scale_x_continuous(limits = c(0,45)) +
+  xlab("Observations") + ylab("Frequency")
+plot_grid(chlPPFit3, chlPPDist3, labels = "AUTO", align = "h", scale = 0.9)
 #---------------------------------------------------------------------------
 ### Tadpole Mass Modeling
 ### Formulas
@@ -217,7 +217,7 @@ tadModSum<- tadModSum$fixed %>% round(., 2) %>%
 
 tadPPFit<- pp_check(tadFitList[[bestTadMod]], type = 'scatter_avg')
 tadPPDist<-pp_check(tadFitList[[bestTadMod]], ndraws = 100) + scale_x_continuous(limits = c(0,20))  +
-  xlab("Density") 
+  xlab("Observations") + ylab("Frequency")
 plot_grid(tadPPFit, tadPPDist, labels = "AUTO", align = "h", scale = 0.9)
 
 #---------------------------------------------------------------------------
@@ -276,7 +276,7 @@ copeModSum<- copeModSum$fixed %>% round(., 2) %>%
 
 copePPFit<- pp_check(copeFitList[[bestCopeMod]], type = 'scatter_avg')
 copePPDist<-pp_check(copeFitList[[bestCopeMod]], ndraws = 100) + scale_x_continuous(limits = c(0,3000))  +
-  xlab("Density") 
+  xlab("Observations") + ylab("Frequency")
 plot_grid(copePPFit, copePPDist, labels = "AUTO", align = "h", scale = 0.9)
 
 
@@ -336,7 +336,7 @@ diploModSum<- diploModSum$fixed %>% round(., 2) %>%
 
 diploPPFit <-pp_check(diploFitList[[bestDiploMod]], type = 'scatter_avg')
 diploPPDist<-pp_check(diploFitList[[bestDiploMod]], ndraws = 100) + scale_x_continuous(limits = c(0,750))  +
-  xlab("Density") 
+  xlab("Observations") + ylab("Frequency")
 plot_grid(diploPPFit, diploPPDist, labels = "AUTO", align = "h", scale = 0.9)
 
 
